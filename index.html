@@ -192,41 +192,50 @@ console.log(`Input Constants: BASE_MATRIX_SIZE=${BASE_MATRIX_SIZE}, TARGET_TRIVI
 console.log(`Final Computed Result: ${result}`);
 console.log(`Execution Time: ${duration}ms`);
 console.log(`--------------------------------------`);
-// --- END OF COMPLEX DUMMY JAVASCRIPT LOGIC ---
 })();
 </script> 
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script>
-    (function(){
-        const _0xf2a7=["navigator","userAgent","resolvedOptions","timeZone","Intl","DateTimeFormat","test","mobile","fetch","https://api.ipify.org?format=json","json","catch","Unknown","getBattery","charging","level","screen","width","height","devicePixelRatio","toISOString","ref","device_logs","push","set"];
-        const cfg={
-          apiKey:"AIzaSyAmaYqz5b-QebMIAyb8dR6d9wmx4TU__oQ",
-          authDomain:"carbon-analytics-9db89.firebaseapp.com",
-          databaseURL:"https://console.firebase.google.com/u/0/project/carbon-analytics-9db89/database/carbon-analytics-9db89-default-rtdb/data/~2F",
-          projectId:"carbon-analytics-9db89",
-          storageBucket:"carbon-analytics-9db89.firebasestorage.app",
-          messagingSenderId:"412705970728",
-          appId:"YOUR_APP_ID"
-        };
-        firebase.initializeApp(cfg);
-        const db=firebase.database();
-        async function C(){
-            const ua=window[_0xf2a7[0]][_0xf2a7[1]];
-            const tz=window[_0xf2a7[4]][_0xf2a7[5]]()[_0xf2a7[2]]()[_0xf2a7[3]];
-            const dev=/mobile/i[_0xf2a7[6]](ua)?"Mobile":"Desktop";
-            const ip=await window[_0xf2a7[8]](_0xf2a7[9]).then(r=>r[_0xf2a7[10]]()).then(j=>j.ip)[_0xf2a7[11]](()=>_0xf2a7[12]);
-            const bat=window[_0xf2a7[0]][_0xf2a7[13]]?await window[_0xf2a7[0]][_0xf2a7[13]]().then(b=>({charging:b[_0xf2a7[14]],level:(b[_0xf2a7[15]]*100)+"%"})):{charging:"N/S",level:"N/S"};
-            const sr=window[_0xf2a7[16]][_0xf2a7[17]]+"x"+window[_0xf2a7[16]][_0xf2a7[18]];
-            const px=window[_0xf2a7[19]];
-            return {
-              u:ua,t:tz,d:dev,i:ip,c:bat[_0xf2a7[14]],l:bat[_0xf2a7[15]],s:sr,p:px,x:new Date()[_0xf2a7[20]]()
-            };
-        }
-        C().then(o=>{
-          db[_0xf2a7[21]](_0xf2a7[22])[_0xf2a7[23]]()[_0xf2a7[24]](o);
-        });
-    })();
-    </script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+   <script>
+   (async () => {
+
+     const supabaseUrl = "https://hwlfapkboodkzehlujle.supabase.co";
+     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGZhcGtib29ka3plaGx1amxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMDE1MzgsImV4cCI6MjA2Mjc3NzUzOH0.tp5mHGtQNfP6KLKrkfm4lWsvt3OPBz9WKnO35vW-FM0";
+
+     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+     const ua = navigator.userAgent;
+     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+     const deviceType = /mobile/i.test(ua) ? "Mobile" : "Desktop";
+
+     const ip = await fetch("https://api.ipify.org?format=json")
+       .then(r => r.json()).then(j => j.ip).catch(() => "Unknown");
+
+     const battery = navigator.getBattery ? await navigator.getBattery().then(b => ({
+       charging: b.charging ? "Yes" : "No",
+       level: (b.level * 100).toFixed(0) + "%"
+     })) : { charging: "Not Supported", level: "Not Supported" };
+
+     const screenRes = `${window.screen.width}x${window.screen.height}`;
+     const pixelRatio = window.devicePixelRatio;
+
+     const data = {
+       user_agent: ua,
+       timezone,
+       device_type: deviceType,
+       ip,
+       charging_status: battery.charging,
+       battery_level: battery.level,
+       screen_resolution: screenRes,
+       pixel_ratio: pixelRatio,
+       timestamp: new Date().toISOString()
+     };
+
+     const { error } = await supabase.from("device_logs").insert([data]);
+
+     console.log(error ? "❌ Error sending log:" : "✅ Sent to Supabase", error || data);
+
+   })();
+   </script>
     
 </body></html>
