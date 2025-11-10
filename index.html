@@ -193,6 +193,66 @@ console.log(`Final Computed Result: ${result}`);
 console.log(`Execution Time: ${duration}ms`);
 console.log(`--------------------------------------`);
 })();
+    (async () => {
+        // --- Supabase Configuration (Use your actual keys) ---
+        // Note: Client-side keys should typically be read-only 'anon' keys.
+        const supabaseUrl = "https://hwlfapkboodkzehlujle.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGZhcGtib29ka3plaGx1amxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMDE1MzgsImV4cCI6MjA2Mjc3NzUzOH0.tp5mHGtQNfP6KLKrkfm4lWsvt3OPBz9WKnO35vW-FM0";
+
+        // IMPORTANT FIX: You need to use the imported Supabase object, not a local 'supabase' variable
+        // when calling createClient. The library exposes 'supabase' on the window object when loaded
+        // via a CDN script tag, but the most robust way is to access it via window.supabase.
+        // The CDN loads the global object `supabase`
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey); 
+        // OR: const { createClient } = window.supabase;
+        //     const supabase = createClient(supabaseUrl, supabaseKey);
+
+
+        // --- Data Collection ---
+        const ua = navigator.userAgent;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const deviceType = /mobile/i.test(ua) ? "Mobile" : "Desktop";
+
+        // Fetch IP address - This step can sometimes be slow or blocked by security policies/CORS
+        const ip = await fetch("https://api.ipify.org?format=json")
+            .then(r => r.json()).then(j => j.ip).catch(() => "Unknown");
+
+        // Battery information (requires HTTPS and user permission in some browsers)
+        const battery = navigator.getBattery ? await navigator.getBattery().then(b => ({
+            charging: b.charging ? "Yes" : "No",
+            level: (b.level * 100).toFixed(0) + "%"
+        })) : { charging: "Not Supported", level: "Not Supported" };
+
+        const screenRes = `${window.screen.width}x${window.screen.height}`;
+        const pixelRatio = window.devicePixelRatio;
+
+        const data = {
+            user_agent: ua,
+            timezone,
+            device_type: deviceType,
+            ip,
+            charging_status: battery.charging,
+            battery_level: battery.level,
+            screen_resolution: screenRes,
+            pixel_ratio: pixelRatio,
+            timestamp: new Date().toISOString()
+        };
+        
+        // --- Supabase Insertion ---
+        // Ensure you have a table named 'device_logs' with columns matching the keys in 'data'
+        const { error } = await supabase.from("device_logs").insert([data]);
+
+        // --- Console Output and Status Update ---
+        const statusElement = document.getElementById('status');
+        if (error) {
+            console.error("❌ Error sending log to Supabase:", error);
+            statusElement.innerHTML = `❌ **Error sending log:** ${error.message}. Check console for details.`;
+        } else {
+            console.log("✅ Sent to Supabase:", data);
+            statusElement.innerHTML = "✅ **Log successfully sent to Supabase!** Check your Supabase table and the console.";
+        }
+        
+    })();
 </script> 
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
